@@ -112,12 +112,44 @@ TriggerScope (all) & 14 & 35 & 9278 & 0 & 0.38\% & 0\% \\
 
 # Critique
 
+## Strengths
+
+1. TriggerScope provides **rich semantics** that help manual analysis, by reconstructing full predicate conditions.
+1. Novel approach: **focus on checks**, not malicious behaviors.
+1. **Fewer FPs, FNs** than other tools.
+
+## Issues: limits of analysis
+
+* Definition of **suspicious predicate** is too narrow
+    * Only checks against hardcoded values
+    * Several implementations could be proposed
+* Authors claim **0\% FNs**, but the evaluation isn't conclusive
+    * *we manually inspected a random subset of 20 applications for which our analysis did not identify any suspicious check. We spent about 10 minutes per application, and we did not find any false negatives.*
+    * Difficult to assess FNs if no tool finds anything and source code is unavailable
+
+## Issues: evasion techniques
+
+* *Reflection*, *dynamic code loading*, *polymorphism* and *conditional code obfuscation* \cite{Sharif08} can defeat static analysis.
+    * Authors say that these techniques are themselves suspicious, but they also have legitimate uses
+* Predicate minimization is **NP-complete**
+    * Is it possible to design "pathological" code to slow down and defeat analysis?
+    * Or result in very complex, meaningless predicates?
+* **Exceptions** were not cited as control flow subversion method
+    * *Statically reasoning in the presence of exceptions and about the effects of exceptions is challenging* \cite{Liang14}
+    * Unclear how the static analysis engine handles exceptions
+    * Unchecked exceptions (e.g. division by zero) could be exploited as stealthy triggers
+
 # Related and future work
 
 ## Related work
 
+AppContext \cite{Yang15}
 
 ## Future evolutions
 
+* **Extend trigger analysis** not only to time, location, SMSs
+    * The trigger could come e.g. from the network
+    * The framework is easily extensible to other types of triggers with more work
+    * Is there a **general approach**?
 
 ## References
