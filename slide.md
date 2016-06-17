@@ -141,9 +141,31 @@ TriggerScope (all) & 14 & 35 & 9278 & 0 & 0.38\% & 0\% \\
 
 # Related and future work
 
-## Related work
+## Related work: static analysis
 
-AppContext \cite{Yang15}
+**AppContext** \cite{Yang15}: supervised machine learning method to classify malicious behavior statically.
+
+1. Starts identifying suspicious actions
+1. Context: which category of input controls the execution of those actions?
+
+Similar idea: just looking at the action isn't enough. Differences:
+
+* AppContext only does **classification** of checks as suspicious or not
+* TriggerScope also provides **semantics* about the predicates, helping manual inspection
+* AppContext considers *any* check that uses certain inputs
+* AppContext's set of suspicious behaviors is narrower than TriggerScope's
+* Expanding the set of AppContext's suspicious behaviors would result in a higher FP rate
+
+## Related work: dynamic analysis
+
+Several **dynamic analyzers** are currently employed to detect malware in Android apps (e.g. Google's Bouncer).
+
+* Logic bombs are known to be resistant to dynamic analysis
+* Dynamic analysis can be detected (artifacts!) and **evaded**
+* Even if a logic bomb is triggered, how to classify it as malicious?
+    * **No semantics** about the checks!
+* Code coverage should be very high
+    * Static analyzers are not affected by this issue
 
 ## Future evolutions
 
