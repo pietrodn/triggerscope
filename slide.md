@@ -6,34 +6,54 @@
 
 ## Logic bombs
 
-*Malicious application logic*: the app violates user's reasonable expectations.
-
 **Logic bomb**: malicious application logic that is triggered only under certain (narrow) conditions.
 
-* Malware is designed to target *specific victims, under certain circumstances*.
+* *Malicious application logic*: the app violates user's reasonable expectations.
+* Malware is designed to target **specific victims, under certain circumstances**.
+* Example: a navigation application, supposed to help a soldier in a war zone finding the shortest route to a location, after a given (hardcoded) date gives to him a long route.
+    * It does not do anything unusual (additional permissions or API calls): the navigation app behaves like... a navigation app!
 
-* Example: a navigation application, supposed to help a soldier in a war zone finding the shortest route to a location, on a given (hardcoded) date gives to him a long route.
-    * It does not do anything unusual (other permissions or API call): the navigation application continues to behave like normal.
+## Another (real) example
+
+**RemoteLock**: Android app that allows the user to remotely lock and unlock the device by using an user-defined keyword.
+
+* The app code also contains the following check:
+
+    `(!= (#sms/#body equals "adfbdfgfsgyhytdfsw")) 0)`
+    * The predicate is triggered when an incoming SMS contains that hardcoded string.
+* By sending a SMS containing that string, the device unlocks.
+* That's a backdoor implemented with a **logic bomb**!
 
 ## Problems with traditional defenses
 
 App Stores employ some defenses, but they are not sufficient.
 
-* **Static analysis**: logic bombs are undetectable because malicious application logic doesn't require additional privileges or make "strange" API calls.
+* **Static analysis**: malicious application logic doesn't require additional privileges or make "strange" API calls
+    * Hard to detect
 * **Dynamic analysis**: likely won't execute code triggered only on a future date or in a certain location.
+    * Code coverage problems
     * Even if covered, how to discern malicious behavior from benign?
-* **Manual audit** (current solution): if source code is not available, no guarantees.
+* **Manual audit**: if source code is not available, no guarantees.
 
 # TriggerScope
 
-## Fundamental principle
+## Key observation
 
-TriggerScope detects logic bombs by analyzing and characterizing the **checks** that guard a given behavior, and not the behavior itself.
+TriggerScope detects logic bombs by precisely analyzing and characterizing **the checks that guard a given behavior**, and to give less importance to the behavior itself.
+
+\vspace{2em}
+
+```java
+if(sms.getBody().equals("adfbdf...")) // Look here!
+{
+    f(); // ...not there.
+}
+```
 
 ## Trigger analysis
 
 * **Predicate**: logic formula used in conditional statement.
-    * `(A or B) and C`
+    * `(&& (!= (#sms/#body contains "MPS:") 0) (!= (#sms/#body contains "gps") 0))`
     * **Suspicious predicate**: a predicate satisfied only under very specific, narrow conditions.
 * **Functionality**: a set of basic blocks in a program.
     * **Sensitive functionality**: a functionality performing, directly or indirectly a sensitive operation.
@@ -80,6 +100,7 @@ TriggerScope detects logic bombs by analyzing and characterizing the **checks** 
 
 * **Benign applications**: 9582 apps from Google Play Store
     * They all use time-, location- or SMS-related APIs
+    * Actually, TriggerScope identified backdoors in two "benign" apps, confirmed by manual inspection!
 * **Malign applications**: 14 apps from several sources
     * Stealthy malware developed for previous researches
     * Real-world malware samples
@@ -114,16 +135,17 @@ TriggerScope (all) & 14 & 35 & 9278 & 0 & 0.38\% & 0\% \\
 
 ## Strengths
 
-1. TriggerScope provides **rich semantics** that help manual analysis, by reconstructing full predicate conditions.
-1. Novel approach: **focus on checks**, not malicious behaviors.
-1. **Fewer FPs, FNs** than other tools.
+* TriggerScope provides **rich semantics** on predicates that help manual analysis
+    * This makes the tool extensible, open for future research
+* Novel approach: **focus on checks**, not malicious behaviors.
+* **Fewer FPs, FNs** than other tools.
 
 ## Issues: limits of analysis
 
 * Definition of **suspicious predicate** is too narrow
     * Only checks against hardcoded values
     * Several implementations could be proposed
-* Authors claim **0\% FNs**, but the evaluation isn't conclusive
+* Authors claim **0% FNs**, but the evaluation isn't conclusive
     * *we manually inspected a random subset of 20 applications for which our analysis did not identify any suspicious check. We spent about 10 minutes per application, and we did not find any false negatives.*
     * Difficult to assess FNs if no tool finds anything and source code is unavailable
 
@@ -150,11 +172,10 @@ TriggerScope (all) & 14 & 35 & 9278 & 0 & 0.38\% & 0\% \\
 
 Similar idea: just looking at the action isn't enough. Differences:
 
-* AppContext only does **classification** of checks as suspicious or not
-* TriggerScope also provides **semantics* about the predicates, helping manual inspection
-* AppContext considers *any* check that uses certain inputs
+* AppContext only **classifies** triggers as suspicious or not, while TriggerScope also provides **semantics** about the predicates, helping manual inspection
+* AppContext considers *any* check that uses certain inputs, independently from the typology of the check
 * AppContext's set of suspicious behaviors is narrower than TriggerScope's
-* Expanding the set of AppContext's suspicious behaviors would result in a higher FP rate
+    * expanding it would result in a higher FP rate
 
 ## Related work: dynamic analysis
 
@@ -172,6 +193,6 @@ Several **dynamic analyzers** are currently employed to detect malware in Androi
 * **Extend trigger analysis** not only to time, location, SMSs
     * The trigger could come e.g. from the network
     * The framework is easily extensible to other types of triggers with more work
-    * Is there a **general approach**?
+    * Is there **a more general approach**?
 
 ## References
