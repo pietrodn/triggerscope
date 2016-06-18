@@ -2,7 +2,7 @@
 
 ![](images/title.pdf)\  
 
-# Introduction
+# Introduction to logic bombs
 
 ## Logic bombs
 
@@ -10,8 +10,10 @@
 
 * *Malicious application logic*: violation of user's reasonable expectations
 * Malware is designed to target **specific victims, under certain circumstances**
-* Example: a navigation application, supposed to help a soldier in a war zone finding the shortest route to a location, after a given (hardcoded) date gives to him a long route.
-    * It does not do anything unusual (additional permissions or API calls): the navigation app behaves like... a navigation app!
+
+*Example*: take a navigation application, supposed to help a soldier in a war zone find the shortest route to a location.
+
+* after a given (hardcoded) date, it gives to him longer, more dangerous routes
 
 ## Another (real) example
 
@@ -29,7 +31,8 @@
 App Stores employ some defenses, but they are not sufficient.
 
 * **Static analysis**: malicious application logic doesn't require additional privileges or make "strange" API calls
-    * Hard to detect
+    * Malicious behavior is deeply hidden within the app logic
+    * Example: the malicious navigation app... behaved like any navigation app!
 * **Dynamic analysis**: likely won't execute code triggered only on a future date or in a certain location
     * Code coverage problems
     * Can be detected and evaded
@@ -50,7 +53,7 @@ TriggerScope detects logic bombs by precisely analyzing and characterizing **the
 ```java
 if(sms.getBody().equals("adfbdf...")) // Look here!
 {
-    f(); // ...not there.
+    myObject.doSomething(); // ...not there.
 }
 ```
 
@@ -141,6 +144,7 @@ TriggerScope (all) & 14 & 35 & 9278 & 0 & 0.38\% & 0\% \\
 ## Strengths
 
 * TriggerScope provides **rich semantics** on predicates that help manual analysis
+    * Great help for manual analysis
     * This makes the tool extensible, open for future research
 * Novel approach: **focus on checks**, not malicious behaviors
 * **Fewer FPs, FNs** than other tools
@@ -148,7 +152,7 @@ TriggerScope (all) & 14 & 35 & 9278 & 0 & 0.38\% & 0\% \\
 ## Issues: limits of analysis
 
 * Definition of **suspicious predicate** is too narrow
-    * Only checks against hardcoded values
+    * Only checks against hardcoded values are considered
 * Authors claim **0% FNs**, but the evaluation isn't conclusive
     * *we manually inspected a random subset of 20 applications for which our analysis did not identify any suspicious check. We spent about 10 minutes per application, and we did not find any false negatives.*
     * Difficult to assess FNs if no tool finds anything and source code is unavailable
@@ -162,7 +166,7 @@ TriggerScope (all) & 14 & 35 & 9278 & 0 & 0.38\% & 0\% \\
 * Predicate minimization is **NP-complete**
     * Is it possible to design "pathological" code to slow down and defeat analysis?
     * Or result in very complex, meaningless predicates?
-* **Exceptions** were not cited as control flow subversion method
+* **Exceptions** were not cited as a control flow subversion method
     * *Statically reasoning in the presence of exceptions and about the effects of exceptions is challenging* \cite{Liang14}
     * Unclear how the static analysis engine handles exceptions
     * Unchecked exceptions (e.g. division by zero) could be exploited as stealthy triggers
@@ -179,9 +183,8 @@ TriggerScope (all) & 14 & 35 & 9278 & 0 & 0.38\% & 0\% \\
 Similar idea: just looking at the action isn't enough. Differences:
 
 * AppContext only **classifies** triggers as suspicious or not; TriggerScope also provides **semantics** about the predicates, helping manual inspection
-* AppContext considers *any* predicate that uses certain inputs; TriggerScope studies the typology of the predicate
-* AppContext's set of suspicious behaviors is narrower than TriggerScope's
-    * expanding it would result in a higher FP rate
+* AppContext does not consider the typology of the predicate, only the type of its inputs
+* **Higher FP rate** than TriggerScope
 
 ## Future evolutions
 
