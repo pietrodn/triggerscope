@@ -8,7 +8,7 @@
 
 **Logic bomb**: malicious application logic that is triggered only under certain (narrow) conditions.
 
-* *Malicious application logic*: the app violates user's reasonable expectations.
+* *Malicious application logic*: violation of user's reasonable expectations.
 * Malware is designed to target **specific victims, under certain circumstances**.
 * Example: a navigation application, supposed to help a soldier in a war zone finding the shortest route to a location, after a given (hardcoded) date gives to him a long route.
     * It does not do anything unusual (additional permissions or API calls): the navigation app behaves like... a navigation app!
@@ -32,14 +32,18 @@ App Stores employ some defenses, but they are not sufficient.
     * Hard to detect
 * **Dynamic analysis**: likely won't execute code triggered only on a future date or in a certain location.
     * Code coverage problems
+    * Can be detected and evaded
     * Even if covered, how to discern malicious behavior from benign?
 * **Manual audit**: if source code is not available, no guarantees.
+    * Code can be obfuscated
 
 # TriggerScope
 
 ## Key observation
 
-TriggerScope detects logic bombs by precisely analyzing and characterizing **the checks that guard a given behavior**, and to give less importance to the behavior itself.
+TriggerScope detects logic bombs by precisely analyzing and characterizing **the checks (conditionals, predicates) that guard a given behavior**.
+
+* It gives less importance to the (malicious) behavior itself.
 
 \vspace{2em}
 
@@ -62,7 +66,7 @@ if(sms.getBody().equals("adfbdf...")) // Look here!
 
 ## Analysis overview (1)
 
-1. **Static analysis** of bytecode; Control Flow Graph.
+1. **Static analysis** of bytecode; building of Control Flow Graph.
 2. **Symbolic Values Modeling** for integer, string, time, location and SMS-based objects.
 3. **Expression Trees** are appended to each symbolic object referenced in a check.
     * Reconstruction of the *semantics* of the check, often lost in bytecode.
@@ -86,7 +90,7 @@ if(sms.getBody().equals("adfbdf...")) // Look here!
 
 6. **Predicate Classification**: a check is **suspicious** if it's equivalent to:
     * Comparison between current *time* value and constant
-    * Bounds check on *location*
+    * Bounds check on GPS *location*
     * Hard-coded patterns on body or sender of *SMS*
 7. **Control-Dependency Analysis**: control dependency between *suspicious predicates* and *sensitive functionalities*.
     * sensitive = privileged Android APIs + fileystem op.
@@ -101,7 +105,7 @@ if(sms.getBody().equals("adfbdf...")) // Look here!
 * **Benign applications**: 9582 apps from Google Play Store
     * They all use time-, location- or SMS-related APIs
     * Actually, TriggerScope identified backdoors in two "benign" apps, confirmed by manual inspection!
-* **Malign applications**: 14 apps from several sources
+* **Malicious applications**: 14 apps from several sources
     * Stealthy malware developed for previous researches
     * Real-world malware samples
     * HackingTeam RCSAndroid
@@ -144,10 +148,11 @@ TriggerScope (all) & 14 & 35 & 9278 & 0 & 0.38\% & 0\% \\
 
 * Definition of **suspicious predicate** is too narrow
     * Only checks against hardcoded values
-    * Several implementations could be proposed
 * Authors claim **0% FNs**, but the evaluation isn't conclusive
     * *we manually inspected a random subset of 20 applications for which our analysis did not identify any suspicious check. We spent about 10 minutes per application, and we did not find any false negatives.*
     * Difficult to assess FNs if no tool finds anything and source code is unavailable
+* This analysis is still **blacklisting**
+    * We're competing with the attacker's creativity
 
 ## Issues: evasion techniques
 
@@ -163,7 +168,7 @@ TriggerScope (all) & 14 & 35 & 9278 & 0 & 0.38\% & 0\% \\
 
 # Related and future work
 
-## Related work: static analysis
+## Related work: AppContext
 
 **AppContext** \cite{Yang15}: supervised machine learning method to classify malicious behavior statically.
 
@@ -177,22 +182,14 @@ Similar idea: just looking at the action isn't enough. Differences:
 * AppContext's set of suspicious behaviors is narrower than TriggerScope's
     * expanding it would result in a higher FP rate
 
-## Related work: dynamic analysis
-
-Several **dynamic analyzers** are currently employed to detect malware in Android apps (e.g. Google's Bouncer).
-
-* Logic bombs are known to be resistant to dynamic analysis
-* Dynamic analysis can be detected (artifacts!) and **evaded**
-* Even if a logic bomb is triggered, how to classify it as malicious?
-    * **No semantics** about the checks!
-* Code coverage should be very high
-    * Static analyzers are not affected by this issue
-
 ## Future evolutions
 
 * **Extend trigger analysis** not only to time, location, SMSs
     * The trigger could come e.g. from the network
-    * The framework is easily extensible to other types of triggers with more work
+    * The framework is easily extensible to other types of triggers with more work to model other symbolic values
     * Is there **a more general approach**?
+* **Quantitative analysis** of predicate "suspiciousness"
+    * Currently, it's defined in a qualitative, ad-hoc way
+    * Could be combined with classification methods
 
 ## References
