@@ -8,20 +8,20 @@
 
 **Logic bomb**: malicious application logic that is triggered only under certain (narrow) conditions.
 
-* *Malicious application logic*: violation of user's reasonable expectations.
-* Malware is designed to target **specific victims, under certain circumstances**.
+* *Malicious application logic*: violation of user's reasonable expectations
+* Malware is designed to target **specific victims, under certain circumstances**
 * Example: a navigation application, supposed to help a soldier in a war zone finding the shortest route to a location, after a given (hardcoded) date gives to him a long route.
     * It does not do anything unusual (additional permissions or API calls): the navigation app behaves like... a navigation app!
 
 ## Another (real) example
 
-**RemoteLock**: Android app that allows the user to remotely lock and unlock the device by using an user-defined keyword.
+**RemoteLock**: Android app that allows the user to remotely lock and unlock the device by using an user-defined keyword
 
 * The app code also contains the following check:
 
     `(!= (#sms/#body equals "adfbdfgfsgyhytdfsw")) 0)`
-    * The predicate is triggered when an incoming SMS contains that hardcoded string.
-* By sending a SMS containing that string, the device unlocks.
+    * The predicate is triggered when an incoming SMS contains that hardcoded string
+* By sending a SMS containing that string, the device unlocks
 * That's a backdoor implemented with a **logic bomb**!
 
 ## Problems with traditional defenses
@@ -30,11 +30,11 @@ App Stores employ some defenses, but they are not sufficient.
 
 * **Static analysis**: malicious application logic doesn't require additional privileges or make "strange" API calls
     * Hard to detect
-* **Dynamic analysis**: likely won't execute code triggered only on a future date or in a certain location.
+* **Dynamic analysis**: likely won't execute code triggered only on a future date or in a certain location
     * Code coverage problems
     * Can be detected and evaded
     * Even if covered, how to discern malicious behavior from benign?
-* **Manual audit**: if source code is not available, no guarantees.
+* **Manual audit**: if source code is not available, no guarantees
     * Code can be obfuscated
 
 # TriggerScope
@@ -56,29 +56,29 @@ if(sms.getBody().equals("adfbdf...")) // Look here!
 
 ## Trigger analysis
 
-* **Predicate**: logic formula used in conditional statement.
+* **Predicate**: logic formula used in a conditional statement
     * `(&& (!= (#sms/#body contains "MPS:") 0) (!= (#sms/#body contains "gps") 0))`
-    * **Suspicious predicate**: a predicate satisfied only under very specific, narrow conditions.
-* **Functionality**: a set of basic blocks in a program.
-    * **Sensitive functionality**: a functionality performing, directly or indirectly a sensitive operation.
-    * All calls to Android APIs protected by permissions, and operations involving the filesystem.
-* **Trigger**: suspicious predicate controlling the execution of a sensitive functionality.
+    * **Suspicious predicate**: a predicate satisfied only under very specific, narrow conditions
+* **Functionality**: a set of basic blocks in a program
+    * **Sensitive functionality**: a functionality performing, directly or indirectly a sensitive operation
+    * All calls to Android APIs protected by permissions, and operations involving the filesystem
+* **Trigger**: suspicious predicate controlling the execution of a sensitive functionality
 
 ## Analysis overview (1)
 
-1. **Static analysis** of bytecode; building of Control Flow Graph.
-2. **Symbolic Values Modeling** for integer, string, time, location and SMS-based objects.
-3. **Expression Trees** are appended to each symbolic object referenced in a check.
-    * Reconstruction of the *semantics* of the check, often lost in bytecode.
+1. **Static analysis** of bytecode; building of Control Flow Graph
+2. **Symbolic Values Modeling** for integer, string, time, location and SMS-based objects
+3. **Expression Trees** are built and appended to each symbolic object referenced in a check
+    * Reconstruction of the *semantics* of the check, often lost in bytecode
 
 ![Example of expression tree.](images/expression-tree.pdf)
 
 ## Analysis overview (2)
 
-4. **Block Predicate Extraction**: edges of Control Flow Graph are annotated with simple predicates.
+4. **Block Predicate Extraction**: edges of Control Flow Graph are annotated with simple predicates
     * Simple predicate: P in `if P then X else Y`
 5. **Path Predicate Recovery and Minimization**
-    * Simple predicates are combined to get the *full path predicate* that reaches each basic block.
+    * Combine simple predicates to get the *full path predicate* that reaches each basic block
     * Minimization: elimination of redundant terms in predicates
         * important to reduce false dependencies
 
@@ -93,12 +93,13 @@ if(sms.getBody().equals("adfbdf...")) // Look here!
     * Bounds check on GPS *location*
     * Hard-coded patterns on body or sender of *SMS*
 7. **Control-Dependency Analysis**: control dependency between *suspicious predicates* and *sensitive functionalities*.
-    * sensitive = privileged Android APIs + fileystem op.
+    * sensitive = privileged Android APIs + fileystem ops
     * **Suspiciousness propagates** with data flows and callbacks
     * Problem: data flows through files
         * When in doubt: suspicious!
+8. **Post-processing**: whitelisting for some edge cases
 
-# Evaluation
+# Experiment
 
 ## Data sets
 
@@ -110,7 +111,7 @@ if(sms.getBody().equals("adfbdf...")) // Look here!
     * Real-world malware samples
     * HackingTeam RCSAndroid
 
-## Results (1)
+## Results of analysis
 
 \begin{table}[h]
 \begin{center}
@@ -131,9 +132,9 @@ TriggerScope (all) & 14 & 35 & 9278 & 0 & 0.38\% & 0\% \\
 \end{center}
 \end{table}
 
-## Results (2)
+## False Positives decreasing step after step
 
-![Each step of analysis is useful, because it reduces the false positive rate (FPR).](images/fp-chart.pdf)
+![Each analysis stage is useful, because it reduces False Positives.](images/fp-chart.pdf)
 
 # Critique
 
@@ -141,8 +142,8 @@ TriggerScope (all) & 14 & 35 & 9278 & 0 & 0.38\% & 0\% \\
 
 * TriggerScope provides **rich semantics** on predicates that help manual analysis
     * This makes the tool extensible, open for future research
-* Novel approach: **focus on checks**, not malicious behaviors.
-* **Fewer FPs, FNs** than other tools.
+* Novel approach: **focus on checks**, not malicious behaviors
+* **Fewer FPs, FNs** than other tools
 
 ## Issues: limits of analysis
 
@@ -152,7 +153,7 @@ TriggerScope (all) & 14 & 35 & 9278 & 0 & 0.38\% & 0\% \\
     * *we manually inspected a random subset of 20 applications for which our analysis did not identify any suspicious check. We spent about 10 minutes per application, and we did not find any false negatives.*
     * Difficult to assess FNs if no tool finds anything and source code is unavailable
 * This analysis is still **blacklisting**
-    * We're competing with the attacker's creativity
+    * We're competing against attackers' creativity
 
 ## Issues: evasion techniques
 
@@ -170,15 +171,15 @@ TriggerScope (all) & 14 & 35 & 9278 & 0 & 0.38\% & 0\% \\
 
 ## Related work: AppContext
 
-**AppContext** \cite{Yang15}: supervised machine learning method to classify malicious behavior statically.
+**AppContext** \cite{Yang15}: supervised machine learning method to classify malicious behavior statically
 
 1. Starts identifying suspicious actions
 1. Context: which category of input controls the execution of those actions?
 
 Similar idea: just looking at the action isn't enough. Differences:
 
-* AppContext only **classifies** triggers as suspicious or not, while TriggerScope also provides **semantics** about the predicates, helping manual inspection
-* AppContext considers *any* check that uses certain inputs, independently from the typology of the check
+* AppContext only **classifies** triggers as suspicious or not; TriggerScope also provides **semantics** about the predicates, helping manual inspection
+* AppContext considers *any* predicate that uses certain inputs; TriggerScope studies the typology of the predicate
 * AppContext's set of suspicious behaviors is narrower than TriggerScope's
     * expanding it would result in a higher FP rate
 
