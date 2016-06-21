@@ -17,7 +17,7 @@
 
 ## Another (real) example
 
-**RemoteLock**: Android app that allows the user to remotely lock and unlock the device by using an user-defined keyword
+**RemoteLock**: Android app that allows the user to remotely lock and unlock the device with a SMS containing an user-defined keyword
 
 * The app code also contains the following check:
 
@@ -64,7 +64,7 @@ if(sms.getBody().equals("adfbdf...")) // Look here!
     * **Suspicious predicate**: a predicate satisfied only under very specific, narrow conditions
 * **Functionality**: a set of basic blocks in a program
     * **Sensitive functionality**: a functionality performing, directly or indirectly a sensitive operation
-    * All calls to Android APIs protected by permissions, and operations involving the filesystem
+    * In practice: all calls to Android APIs protected by permissions, and operations involving the filesystem
 * **Trigger**: suspicious predicate controlling the execution of a sensitive functionality
 
 ## Analysis overview (1)
@@ -143,8 +143,8 @@ TriggerScope (all) & 14 & 35 & 9278 & 0 & 0.38\% & 0\% \\
 
 ## Strengths
 
-* TriggerScope provides **rich semantics** on predicates that help manual analysis
-    * Great help for manual analysis
+* TriggerScope provides **rich semantics** on predicates
+    * Great help for **manual audits**
     * This makes the tool extensible, open for future research
 * Novel approach: **focus on checks**, not malicious behaviors
 * **Fewer FPs, FNs** than other tools
@@ -153,10 +153,11 @@ TriggerScope (all) & 14 & 35 & 9278 & 0 & 0.38\% & 0\% \\
 
 * Definition of **suspicious predicate** is too narrow
     * Only checks against hardcoded values are considered
+    * Triggers can come from the network or elsewhere
 * Authors claim **0% FNs**, but the evaluation isn't conclusive
     * *we manually inspected a random subset of 20 applications for which our analysis did not identify any suspicious check. We spent about 10 minutes per application, and we did not find any false negatives.*
     * Difficult to assess FNs if no tool finds anything and source code is unavailable
-* This analysis is still **blacklisting**
+* This analysis is still **blacklisting**: listing things we don't like
     * We're competing against attackers' creativity
 
 ## Issues: evasion techniques
